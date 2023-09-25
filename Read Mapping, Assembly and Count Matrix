@@ -1,0 +1,89 @@
+##PREPARATION AND INDEXING
+
+##creating directory
+mkdir -p /Volumes/archive/kennylab/DaisyPower/kuku_read_mapping
+
+##entering that directory 
+cd /Volumes/archive/kennylab/DaisyPower/kuku_read_mapping
+
+##coping pre-existing genomic DNA file (that we're aligning to?) into my directory
+cp /Volumes/archive/kennylab/Kuku_seq/FinalAssembly.fasta kuku.fasta
+
+##activating hisat2
+conda activate moshi
+
+##indexing that genomic DNA file
+hisat2-build kuku.fasta kuku.fasta >> log.txt 2>> log.err.txt
+
+
+##making a subdirectory for first sample 
+mkdir -p 8201-03
+
+##map the reads for that first sample
+hisat2 -x kuku.fasta -p 40 --no-discordant --no-mixed --max-intronlen 20000 -1 /Volumes/archive/kennylab/DaisyPower/trimmed_paired/8201-03-R1_paired.fastq -2 /Volumes/archive/kennylab/DaisyPower/trimmed_paired/8201-03-R2_paired.fastq -S 8201-03/result.sam >> 8201-03/log.txt 2>> 8201-03/log.err.txt
+
+##sorts the sam file, and compresses into a BAM formatted alignment file 
+samtools sort -@ 40 -o 8201-03/result.bam 8201-03/result.sam >> 8201-03/log.txt 2>> 8201-03/log.err.txt
+
+##index the BAM file with (.bai)
+samtools index -@ 40 8201-03/result.bam >> 8201-03/log.txt 2>> 8201-03/log.err.txt
+
+##remove sam formatted file (to save space)
+rm -f 8201-03/result.sam
+
+##Use string tie to assemble transcriptome of sample
+stringtie -p 40 -m 30 -g 50 -c 10 -o 8201-03/result.gtf -l 8201-03/result 8201-03/result.bam >> 8201-03/log.txt 2>> 8201-03/log.err.txt
+
+##GTF formatted transcriptome in a file of filenames (FOFN)
+echo 8201-03/result.gtf >> kuku.fofn.txt
+
+##PER SAMPLE MAP AND ASSEMBLE SUBPIPELINE AUTOMATED
+
+##put in terminal
+sh map_and_assemble.sh a_genome.fna a_read_directory a_sample_id
+
+##in the .sh doc
+GENOME=$1
+READDIR=$2
+SAMPLE=$3
+
+
+mkdir -p $SAMPLE
+
+
+hisat2 -x $GENOME -p 40 --no-discordant --no-mixed --max-intronlen 20000 \
+-1 $READDIR/$SAMPLE-R1_paired.fastq \
+-2 $READDIR/$SAMPLE-R2_paired.fastq \
+-S $SAMPLE/result.sam \
+>> $SAMPLE/log.txt 2>> $SAMPLE/log.err.txt
+
+
+samtools sort -@ 40 -o $SAMPLE/result.bam $SAMPLE/result.sam \
+>> $SAMPLE/log.txt 2>> $SAMPLE/log.err.txt
+
+
+samtools index -@ 40 $SAMPLE/result.bam \
+>> $SAMPLE/log.txt 2>> $SAMPLE/log.err.txt
+
+
+rm -f $SAMPLE/result.sam
+
+
+stringtie -p 40 -m 30 -g 50 -c 10 -o $SAMPLE/result.gtf \
+-l $SAMPLE/result 8201-01/result.bam >> $SAMPLE/log.txt 2>> $SAMPLE/log.err.txt
+
+
+echo $SAMPLE/result.gtf >> kuku.fofn.txt
+
+##try with sample 1 8201-01
+sh map_and_assemble.sh kuku_read_mapping/kuku.fasta /Volumes/archive/kennylab/DaisyPower/trimmed_paired 8201-05
+
+##and repeated for all samples 
+
+##merge
+stringtie --merge -p 40 -o kuku.merged.gtf kuku.fofn.txt >> log.txt 2>> log.err.txt
+
+##FEATURECOUNTS 
+
+##compute count matrix 
+featureCounts -p -a kuku.merged.gtf -g gene_id -O -T 40 -o kuku.count.txt */result.bam
