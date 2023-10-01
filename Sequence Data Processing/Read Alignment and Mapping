@@ -1,4 +1,4 @@
-##PREPARATION AND INDEXING
+##Preparation and Indexing 
 
 ##creating directory
 mkdir -p /Volumes/archive/kennylab/DaisyPower/kuku_read_mapping
@@ -14,7 +14,6 @@ conda activate moshi
 
 ##indexing that genomic DNA file
 hisat2-build kuku.fasta kuku.fasta >> log.txt 2>> log.err.txt
-
 
 ##making a subdirectory for first sample 
 mkdir -p 8201-03
@@ -37,7 +36,7 @@ stringtie -p 40 -m 30 -g 50 -c 10 -o 8201-03/result.gtf -l 8201-03/result 8201-0
 ##GTF formatted transcriptome in a file of filenames (FOFN)
 echo 8201-03/result.gtf >> kuku.fofn.txt
 
-##PER SAMPLE MAP AND ASSEMBLE SUBPIPELINE AUTOMATED
+##Per Sample Map and Assemble Subpipeline Automated
 
 ##put in terminal
 sh map_and_assemble.sh a_genome.fna a_read_directory a_sample_id
@@ -82,17 +81,6 @@ sh map_and_assemble.sh kuku_read_mapping/kuku.fasta /Volumes/archive/kennylab/Da
 
 ##merge 
 stringtie --merge -p 40 -o kuku.merged.gtf kuku.fofn.txt >> log.txt 2>> log.err.txt
-
-##AUTO ALL SAMPLES INCLUDING PREPROCESSING 
-
-## list out all the FASTQ file paths, extract the file name, remove the extension (which are either -R1_paired.fastq or -R2_paired.fastq) and make a unique list of the substrings remaining
-ls /Volumes/archive/kennylab/DaisyPower/trimmed_paired/*.fastq | xargs -n 1 basename | sed -E 's/-R[12]_paired\.fastq$//' | sort -u
-
-##specify path?
-sh map_and_assemble_automated.sh a_genome a_read_directory an_output_directory
-
-##calling master pipeline
-sh map_and_assemble_automated.sh /Volumes/archive/kennylab/Kuku_seq/FinalAssembly.fasta /Volumes/archive/kennylab/DaisyPower/trimmed_paired kuku_read_mapping
 
 ##FEATURECOUNTS 
 
