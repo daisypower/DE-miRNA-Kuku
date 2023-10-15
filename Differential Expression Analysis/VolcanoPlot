@@ -1,1 +1,45 @@
+#set working directory
 
+#load libraries de_genes <- read.csv
+
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+
+#input data
+de_genes <- read.csv('resultstxt.txt', sep = '\t')
+
+#check data is there
+head(de_genes)
+colnames(de_genes)
+
+de_genes$diffexpressed <- 'NO'
+
+##check new column is there
+head(de_genes)
+
+##check all seqs there 
+dim(de_genes)
+
+##label upreg seqs
+de_genes$diffexpressed[de_genes$log2FoldChange>2 & de_genes$PAdj<0.05] = "UP"
+
+##label downreg seqs
+de_genes$diffexpressed[de_genes$log2FoldChange<2 & de_genes$PAdj<0.05] = "DOWN"
+
+##check its worked SLAY!
+head(de_genes)
+
+##block additional labelling
+de_genes$delabel<-NA
+
+##make plot
+
+ggplot(data=de_genes,aes(x=log2FoldChange,y=-log10(PValue),col=diffexpressed,label=delabel))+geom_point()+theme_minimal()+geom_text_repel()+scale_color_manual(values=c('purple','black','green')+theme(text=element_text(size=20))
+
+ggplot(data=de_genes,aes(x=log2FoldChange,y=-log10(PValue),col=diffexpressed,label=delabel))+
+         geom_point()+
+         theme_minimal()+
+         geom_text_repel()+
+         scale_color_manual(values=c('purple','black','green'))+
+         theme(text=element_text(size = 12))  
