@@ -47,6 +47,15 @@ dds = DESeqDataSetFromMatrix(countData=countData, colData=colData, design = ~con
 # Run deseq
 dse = DESeq(dds)
 
+##do quick PCA plot
+rlogcounts <- rlog(dds)
+ 
+pcaData <- plotPCA(rlogcounts, intgroup="condition", returnData=TRUE)
+ 
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, add.labels = TRUE, aes(PC1, PC2, color=condition, shape=condition)) +
+  geom_point(size=3))
+
 # Format the results.
 res = results(dse)
 
