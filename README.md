@@ -4,6 +4,6 @@ This repository contains the code used during the Honours project: "miRNA in New
 
 The code has been split into folders based on the function of the code.
 
-It also includes Supplementary Tables 6-41. 
+It also includes Supplementary Tables 6-41 and the MultiQC Report generated for trimmed reads. 
 
 
